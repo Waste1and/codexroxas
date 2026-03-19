@@ -212,6 +212,8 @@ use crate::hook_runtime::record_pending_input;
 use crate::hook_runtime::run_pending_session_start_hooks;
 use crate::hook_runtime::run_user_prompt_submit_hooks;
 use crate::instructions::UserInstructions;
+use crate::kappa_lambda::HealthStatus;
+use crate::kappa_lambda::KappaLambdaHealth;
 use crate::mcp::CODEX_APPS_MCP_SERVER_NAME;
 use crate::mcp::McpManager;
 use crate::mcp::auth::compute_auth_statuses;
@@ -695,6 +697,11 @@ impl Codex {
         Ok(event)
     }
 
+    /// Return a snapshot of the current κ–λ conversational health metrics.
+    pub fn health_status(&self) -> HealthStatus {
+        self.session.health_status()
+    }
+
     pub async fn steer_input(
         &self,
         input: Vec<UserInput>,
@@ -767,6 +774,8 @@ pub(crate) struct Session {
     pub(crate) services: SessionServices,
     js_repl: Arc<JsReplHandle>,
     next_internal_sub_id: AtomicU64,
+    /// κ–λ conversational health tracker.
+    health: Arc<KappaLambdaHealth>,
 }
 
 #[derive(Clone, Debug)]
@@ -1848,6 +1857,7 @@ impl Session {
             services,
             js_repl,
             next_internal_sub_id: AtomicU64::new(0),
+            health: Arc::new(KappaLambdaHealth::new()),
         });
         if let Some(network_policy_decider_session) = network_policy_decider_session {
             let mut guard = network_policy_decider_session.write().await;
@@ -2042,6 +2052,11 @@ impl Session {
     pub(crate) async fn get_total_token_usage(&self) -> i64 {
         let state = self.state.lock().await;
         state.get_total_token_usage(state.server_reasoning_included())
+    }
+
+    /// Return a snapshot of the current κ–λ conversational health metrics.
+    pub(crate) fn health_status(&self) -> HealthStatus {
+        self.health.status()
     }
 
     pub(crate) async fn get_total_token_usage_breakdown(&self) -> TotalTokenUsageBreakdown {
@@ -2607,6 +2622,12 @@ impl Session {
         // Record the last known agent status.
         if let Some(status) = agent_status_from_event(&event.msg) {
             self.agent_status.send_replace(status);
+        }
+        // Update κ–λ health metrics based on turn outcomes.
+        match &event.msg {
+            EventMsg::TurnComplete(_) => self.health.record_hit(),
+            EventMsg::TurnAborted(_) => self.health.record_miss(),
+            _ => {}
         }
         if let Err(e) = self.tx_event.send(event).await {
             debug!("dropping event because channel is closed: {e}");
