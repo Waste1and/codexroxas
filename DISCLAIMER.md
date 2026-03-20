@@ -81,5 +81,20 @@ operates, without regard to conflict-of-law provisions.
 
 ---
 
-*Last updated: 2025*
+## Trademark and Intellectual Property
+
+**Kappology**, **Mecasimetra**, and **CodexRoxas** are the intellectual property of
+Zechariah Slaughter / Mecasimetra Systems. All rights reserved except as expressly
+granted under the Apache License, Version 2.0.
+
+**OpenAI** and **Codex** are trademarks of OpenAI. Their use in this repository is
+solely to identify the upstream project from which CodexRoxas is forked; no endorsement
+or affiliation is implied.
+
+Third-party names, logos, and trademarks referenced herein are the property of their
+respective owners. See [NOTICE](NOTICE) for third-party attribution.
+
+---
+
+*Last updated: 2026*
 *See [LICENSE](LICENSE) for the full Apache License 2.0 terms under which this software is distributed.*
