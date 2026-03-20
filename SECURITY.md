@@ -1,5 +1,9 @@
 # Security Policy
 
+> **Note:** CodexRoxas is a community fork of [`openai/codex`](https://github.com/openai/codex) and is **not affiliated with OpenAI**.
+> Security issues in this fork can be reported via the contact below.
+> Vulnerabilities in the upstream project should be reported to OpenAI directly per their policy.
+
 Thank you for helping us keep Codex secure!
 
 ## Reporting Security Issues
