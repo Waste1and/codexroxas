@@ -1,0 +1,136 @@
+{
+  "terms": [
+    {
+      "id": "kappology",
+      "symbol": "𝕂",
+      "name": "Kappology",
+      "short": "The science of continuity",
+      "definition": "Kappology is the formal study of system continuity through the lens of hazard-rate dynamics. Founded by Zechariah Slaughter, it provides a rigorous mathematical framework for understanding how systems degrade, maintain stability, and recover — expressed through the interplay of κ (kappa), λ (lambda), and the bifurcation threshold β_c. Kappology treats continuity not as an empirical property but as a governable scalar, giving engineers deterministic levers to prevent failure before it occurs.",
+      "ancestors": [],
+      "children": ["kappa", "lambda", "bifurcation-threshold", "control-system", "continuity"],
+      "formula": null,
+      "tags": ["framework", "foundation", "root"]
+    },
+    {
+      "id": "kappa",
+      "symbol": "κ",
+      "name": "Kappa",
+      "short": "Continuity scalar ∈ [0, 1]",
+      "definition": "Kappa (κ) is the core continuity scalar in Kappology. It measures how well a system maintains its operational integrity over time. κ ∈ [0, 1] — where κ = 1 denotes perfect continuity and κ = 0 denotes complete failure. It is derived directly from the accumulated hazard: κ = exp(−Λ(t)). A system governed by Kappology continuously monitors κ and ensures that λ is managed to preserve κ above a safe operating threshold.",
+      "ancestors": ["hazard-accumulation", "continuity"],
+      "children": ["hazard-accumulation"],
+      "formula": "κ = exp(−Λ(t))",
+      "tags": ["scalar", "core", "greek"]
+    },
+    {
+      "id": "lambda",
+      "symbol": "λ",
+      "name": "Lambda",
+      "short": "Hazard rate ≥ 0",
+      "definition": "Lambda (λ) is the instantaneous hazard rate — the rate at which a system accumulates risk or degrades at a given moment in time. λ ≥ 0 always. A value of λ = 0 implies no active degradation; increasing values indicate faster risk accumulation and shrinking κ. Lambda is the primary control variable in Kappology. When λ exceeds the bifurcation threshold β_c = 2.0, the system must take corrective action: pause, shed load, or trigger a retrain cycle.",
+      "ancestors": ["hazard-rate"],
+      "children": [],
+      "formula": "λ(t) ≥ 0",
+      "tags": ["rate", "core", "greek"]
+    },
+    {
+      "id": "beta-c",
+      "symbol": "β_c",
+      "name": "Bifurcation Threshold",
+      "short": "Critical value β_c = 2.0",
+      "definition": "The bifurcation threshold β_c = 2.0 is the canonical critical value in Kappology's governance framework. When the instantaneous hazard rate λ exceeds β_c, the system enters a bifurcation regime — it must pause operations, shed load, or trigger a retrain/recovery cycle. This threshold cannot be bypassed; it is a hard boundary between stable continuous operation and mandatory controlled recovery. β_c = 2.0 was chosen as the canonical value by Zechariah Slaughter based on the structural analogy to period-doubling bifurcations in dynamical systems.",
+      "ancestors": ["lambda", "bifurcation-threshold", "load-shedding"],
+      "children": [],
+      "formula": "if λ > β_c → pause | shed | retrain",
+      "tags": ["threshold", "core", "governance"]
+    },
+    {
+      "id": "hazard-rate",
+      "symbol": "h(t)",
+      "name": "Hazard Rate",
+      "short": "Instantaneous failure intensity",
+      "definition": "The hazard rate h(t) — equivalently λ in Kappology's notation — is the instantaneous rate of failure or state degradation at time t, given that no failure has yet occurred up to t. It is a foundational concept from reliability theory and survival analysis, adapted in Kappology as the primary measurable input for continuity management. Unlike classical reliability engineering, Kappology treats h(t) as a real-time control input, not merely a statistical parameter.",
+      "ancestors": ["continuity"],
+      "children": ["lambda", "hazard-accumulation"],
+      "formula": "h(t) = lim[Δt→0] P(t ≤ T < t+Δt | T ≥ t) / Δt",
+      "tags": ["rate", "reliability", "foundation"]
+    },
+    {
+      "id": "hazard-accumulation",
+      "symbol": "Λ(t)",
+      "name": "Hazard Accumulation",
+      "short": "Cumulative hazard function",
+      "definition": "Hazard accumulation Λ(t) is the cumulative integral of the hazard rate λ over time, representing total accumulated risk from time 0 to t. The continuity scalar κ is defined as κ = exp(−Λ(t)), meaning higher hazard accumulation directly decreases continuity. Monitoring Λ(t) in real time is the primary diagnostic in Kappology's operational framework. When Λ(t) grows faster than a system can compensate, bifurcation becomes inevitable without intervention.",
+      "ancestors": ["lambda"],
+      "children": ["kappa"],
+      "formula": "Λ(t) = ∫₀ᵗ λ(s) ds",
+      "tags": ["integral", "accumulation"]
+    },
+    {
+      "id": "continuity",
+      "symbol": "𝒞",
+      "name": "Continuity",
+      "short": "Unbroken operational integrity",
+      "definition": "Continuity is the central concept in Kappology: the property of a system that maintains unbroken operational integrity through time. It is quantified by κ and governed by managing λ below β_c. Continuity is not merely uptime — it encompasses semantic coherence, load sustainability, predictable state transitions, and the ability to recover without catastrophic loss. All Kappology governance rules serve a single goal: preserving continuity.",
+      "ancestors": ["kappology"],
+      "children": ["kappa", "hazard-rate"],
+      "formula": "𝒞 ≡ κ → 1",
+      "tags": ["concept", "foundation", "core"]
+    },
+    {
+      "id": "bifurcation-threshold",
+      "symbol": "∂",
+      "name": "Bifurcation",
+      "short": "System state divergence point",
+      "definition": "Bifurcation in Kappology refers to the qualitative change in system behavior when hazard accumulation crosses a critical threshold. Below β_c, the system evolves smoothly and continuously. Above β_c, the system enters a bifurcated regime where behavior becomes non-linear and unpredictable without intervention. The concept is adapted from dynamical systems theory — specifically the period-doubling route to chaos — and applied deterministically to engineering governance.",
+      "ancestors": ["continuity"],
+      "children": ["beta-c"],
+      "formula": "λ crossing β_c → regime change",
+      "tags": ["dynamics", "threshold", "foundation"]
+    },
+    {
+      "id": "load-shedding",
+      "symbol": "⊖",
+      "name": "Load Shedding",
+      "short": "Controlled reduction of system load",
+      "definition": "Load shedding is the prescribed deterministic response when λ > β_c in Kappology. By reducing workload on the system, the hazard rate λ is brought back below the bifurcation threshold, allowing κ to recover toward 1. Load shedding is rule-based — not a heuristic — ensuring that recovery is predictable, auditable, and reproducible. Kappology defines explicit shedding protocols so systems can self-govern without human intervention during high-hazard periods.",
+      "ancestors": ["beta-c", "lambda"],
+      "children": [],
+      "formula": "λ > β_c → ⊖ load until λ ≤ β_c",
+      "tags": ["response", "governance", "action"]
+    },
+    {
+      "id": "control-system",
+      "symbol": "Σ",
+      "name": "Control System",
+      "short": "Governed system under Kappology rules",
+      "definition": "A control system in the Kappology framework is any engineered system governed by continuity-first rules: monitoring κ, managing λ, and enforcing β_c thresholds. Kappology-compliant control systems are designed to be self-auditing — they report their κ state, expose λ pipelines, and automatically invoke load shedding or retrain cycles before failure occurs. The goal is a system that can prove its own continuity without external verification.",
+      "ancestors": ["kappology"],
+      "children": ["kappa", "beta-c"],
+      "formula": "Σ: (κ, λ, β_c) → stable operation",
+      "tags": ["system", "architecture", "applied"]
+    },
+    {
+      "id": "retrain-cycle",
+      "symbol": "↺",
+      "name": "Retrain Cycle",
+      "short": "Structured recovery and recalibration",
+      "definition": "A retrain cycle in Kappology is the structured process by which a system recalibrates its parameters after a bifurcation event (λ > β_c). Unlike ad-hoc recovery, a retrain cycle follows a defined protocol: measure the current Λ(t), identify the root cause of elevated λ, apply corrective configuration, and verify that κ has recovered above the safe threshold before resuming full operation. Retrain cycles are logged and contribute to long-term continuity audits.",
+      "ancestors": ["load-shedding", "beta-c"],
+      "children": [],
+      "formula": "↺ triggered when λ > β_c and ⊖ insufficient",
+      "tags": ["recovery", "governance", "action"]
+    },
+    {
+      "id": "mecasimetra",
+      "symbol": "⌬",
+      "name": "Mecasimetra",
+      "short": "Engineering systems and Kappology applications",
+      "definition": "Mecasimetra is the engineering systems entity founded by Zechariah Slaughter, specializing in continuity-first control systems built on Kappology principles. Mecasimetra designs, audits, and operates systems where κ is the primary health metric and β_c compliance is a hard requirement. The name derives from 'mechanics + symmetry' — reflecting the foundational belief that well-engineered systems express mathematical elegance under real-world load.",
+      "ancestors": ["kappology", "control-system"],
+      "children": [],
+      "formula": null,
+      "tags": ["organization", "applied", "founder"]
+    }
+  ]
+}

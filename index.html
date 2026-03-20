@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mecasimetra — continuity-first control systems built on Kappology. Black neon aesthetic. Founded by Zechariah Slaughter." />
+  <meta name="theme-color" content="#ff00aa" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mecasimetra · CodexRoxas" />
+  <meta property="og:description" content="Continuity-first control systems built on Kappology — κ · λ · β_c framework by Zechariah Slaughter." />
+  <meta property="og:type" content="website" />
+
+  <title>Mecasimetra · CodexRoxas</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <!-- Fixed background grid -->
+  <div class="grid-bg" aria-hidden="true"></div>
+  <!-- CRT scanlines (subtle) -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ── Navigation ── -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <a class="nav-logo" href="#hero" aria-label="Mecasimetra home">
+      MECASIMETRA<span>.</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#founder">Founder</a></li>
+      <li><a href="#knowledge">Knowledge</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="https://github.com/Waste1and/codexroxas" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <main>
+    <!-- ══════════════════════════════════════════════════════
+         HERO
+    ══════════════════════════════════════════════════════ -->
+    <section id="hero" aria-label="Introduction">
+      <div class="hero-orb" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <span class="hero-tag">CodexRoxas · Mecasimetra · Kappology</span>
+
+        <h1 class="hero-title">
+          <span class="line-magenta">Continuity</span>
+          <span class="line-white">is engineered,</span>
+          <span class="line-white">not assumed.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          <span id="hero-typed" aria-live="polite">Continuity-first control systems.</span>
+        </p>
+
+        <div class="hero-actions">
+          <a href="#knowledge" class="btn btn-primary">Explore the Knowledge Graph</a>
+          <a href="#services" class="btn btn-outline">View Services</a>
+          <a
+            href="https://github.com/Waste1and/codexroxas"
+            class="btn btn-cyan"
+            target="_blank"
+            rel="noopener noreferrer"
+          >GitHub ↗</a>
+        </div>
+
+        <div class="hero-stats" aria-label="Key metrics">
+          <div class="stat-item">
+            <span class="stat-value">κ</span>
+            <span class="stat-label">Continuity Scalar</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">λ</span>
+            <span class="stat-label">Hazard Rate</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">2.0</span>
+            <span class="stat-label">β_c Threshold</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">∞</span>
+            <span class="stat-label">Auditability</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider" role="separator" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         ABOUT
+    ══════════════════════════════════════════════════════ -->
+    <section id="about" aria-labelledby="about-heading">
+      <div class="section">
+        <span class="section-label">About</span>
+        <h2 class="section-title" id="about-heading">What is Mecasimetra?</h2>
+        <p class="section-sub">
+          Mecasimetra is an engineering systems entity specializing in
+          continuity-first control software built on the Kappology framework.
+          It is both a set of principles and a practical engineering practice —
+          where every system is measured, governed, and audited through κ, λ,
+          and β_c.
+        </p>
+
+        <div class="about-grid">
+          <div>
+            <div class="about-feature">
+              <div class="feature-icon" aria-hidden="true">κ</div>
+              <div class="feature-title">Continuity-First Design</div>
+              <p class="feature-desc">
+                Every system component is designed with κ (kappa) as the
+                primary health metric. If you cannot measure continuity, you
+                cannot govern it.
+              </p>
+            </div>
+
+            <div class="about-feature" style="margin-top:1rem">
+              <div class="feature-icon" aria-hidden="true">λ</div>
+              <div class="feature-title">Hazard Rate Instrumentation</div>
+              <p class="feature-desc">
+                Real-time λ (lambda) pipelines expose the instantaneous hazard
+                rate so operators and automated systems can act before
+                accumulation crosses β_c.
+              </p>
+            </div>
+
+            <div class="about-feature" style="margin-top:1rem">
+              <div class="feature-icon" aria-hidden="true">β_c</div>
+              <div class="feature-title">Hard Governance Thresholds</div>
+              <p class="feature-desc">
+                β_c = 2.0 is a non-negotiable boundary. When λ exceeds it, the
+                system automatically pauses, sheds load, or triggers a retrain
+                cycle — no human intervention required.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div class="about-feature">
+              <div class="feature-icon" aria-hidden="true">⌬</div>
+              <div class="feature-title">CodexRoxas — Community AI Agent</div>
+              <p class="feature-desc">
+                CodexRoxas is a community fork of OpenAI's Codex — a lightweight,
+                open-source AI coding agent that runs locally, combining
+                ChatGPT-level reasoning with sandboxed code execution and file
+                manipulation. Apache 2.0 licensed. Not affiliated with OpenAI.
+              </p>
+            </div>
+
+            <div class="about-feature" style="margin-top:1rem">
+              <div class="feature-icon" aria-hidden="true">🔍</div>
+              <div class="feature-title">Open, Auditable, Reproducible</div>
+              <p class="feature-desc">
+                All Kappology-governed systems log their κ state, expose λ
+                pipelines, and produce reproducible recovery traces. Every
+                retrain cycle is auditable and attributable.
+              </p>
+            </div>
+
+            <div class="about-feature" style="margin-top:1rem">
+              <div class="feature-icon" aria-hidden="true">⚡</div>
+              <div class="feature-title">Minimal Dependencies</div>
+              <p class="feature-desc">
+                Mecasimetra systems are built with minimal external dependencies
+                — reducing attack surface, improving portability, and keeping
+                hazard accumulation from third-party code predictable.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider" role="separator" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         FOUNDER
+    ══════════════════════════════════════════════════════ -->
+    <section id="founder" aria-labelledby="founder-heading">
+      <div class="section">
+        <span class="section-label">Founder</span>
+        <h2 class="section-title" id="founder-heading">Engineer &amp; Architect</h2>
+        <p class="section-sub">
+          Kappology was created by a single engineer's drive to formalize
+          what reliability engineering had long described informally —
+          continuity as a measurable, governable scalar.
+        </p>
+
+        <div class="founder-card">
+          <div class="founder-header">
+            <div class="founder-avatar" aria-hidden="true">ZS</div>
+            <div>
+              <h3 class="founder-name">Zechariah Slaughter</h3>
+              <div class="founder-title-line">
+                <span class="founder-badge badge-magenta">Engineer &amp; Founder</span>
+                <span class="founder-badge badge-cyan">Kappology</span>
+                <span class="founder-badge badge-magenta">Mecasimetra Systems</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="founder-body">
+            <p>
+              Zechariah Slaughter is the engineer and founder of Kappology — a
+              continuity-first mathematical framework for governing control
+              systems through hazard-rate dynamics. His work formalizes the
+              relationship between system health (κ), risk accumulation (λ), and
+              the critical bifurcation threshold (β_c = 2.0) that separates
+              stable operation from mandatory recovery.
+            </p>
+
+            <blockquote class="founder-quote">
+              "Continuity is not a property you observe after the fact —
+              it is a scalar you govern in real time. Kappology gives you the
+              formalism to do that."
+              <footer style="margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted);font-style:normal">
+                — Zechariah Slaughter
+              </footer>
+            </blockquote>
+
+            <p>
+              In the tradition of Newton's application of calculus to physical
+              mechanics — bringing rigorous formalism to previously intuitive
+              phenomena — and Edison's systematic, iterative approach to applied
+              engineering, Slaughter's contribution is the construction of a
+              formal calculus of continuity: a framework where system health
+              is not left to empirical observation but is derived, predicted,
+              and governed by mathematical law.
+            </p>
+
+            <p>
+              Where Newton gave engineers the differential equations to model
+              motion, and Edison demonstrated that invention is methodical
+              iteration under constraint, Kappology provides the
+              continuity-hazard calculus for the design of systems that must
+              not fail silently. It is an engineering framework in that lineage:
+              rigorous, applied, and built for real-world governance.
+            </p>
+
+            <ul class="comparison-list" aria-label="Engineering tradition comparison">
+              <li>
+                <div class="comp-who">Newton</div>
+                <div class="comp-what">Differential calculus applied to physical systems — formalizing motion as a governable quantity.</div>
+              </li>
+              <li>
+                <div class="comp-who">Edison</div>
+                <div class="comp-what">Applied iteration under constraint — systematic, reproducible, production-focused invention.</div>
+              </li>
+              <li>
+                <div class="comp-who">Slaughter</div>
+                <div class="comp-what">Continuity calculus for control systems — κ · λ · β_c as the formal language of system health governance.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider" role="separator" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         KNOWLEDGE / GLOSSARY
+    ══════════════════════════════════════════════════════ -->
+    <section id="knowledge" aria-labelledby="knowledge-heading">
+      <div class="section">
+        <span class="section-label">Knowledge Graph</span>
+        <h2 class="section-title" id="knowledge-heading">Kappology Glossary</h2>
+        <p class="section-sub">
+          Select any term to explore its definition, formal expression, and
+          ancestor concepts. Navigate up the concept hierarchy using ancestor
+          links, or explore derived concepts below each term.
+        </p>
+
+        <div class="knowledge-layout">
+          <!-- Sidebar: search + term list -->
+          <aside aria-label="Term list">
+            <div class="search-wrapper">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                id="term-search"
+                type="search"
+                placeholder="Search terms…"
+                aria-label="Search knowledge graph terms"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div id="term-list" class="term-list" role="listbox" aria-label="Kappology terms">
+              <!-- Populated by glossary.js -->
+              <p style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem">Loading…</p>
+            </div>
+          </aside>
+
+          <!-- Main panel: term detail -->
+          <div
+            id="term-panel"
+            class="term-panel"
+            role="region"
+            aria-label="Term detail"
+            aria-live="polite"
+          >
+            <!-- Populated by glossary.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider" role="separator" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         SERVICES
+    ══════════════════════════════════════════════════════ -->
+    <section id="services" aria-labelledby="services-heading">
+      <div class="section">
+        <span class="section-label">Services</span>
+        <h2 class="section-title" id="services-heading">What We Build</h2>
+        <p class="section-sub">
+          Mecasimetra offers engineering services grounded in Kappology —
+          from continuity audits to bespoke control software. All engagements
+          produce auditable, reproducible artifacts.
+        </p>
+
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon" aria-hidden="true">📊</div>
+            <div class="service-name">Continuity Audits</div>
+            <p class="service-desc">
+              Full κ–λ health modeling of your existing systems. We instrument
+              your stack to expose real-time hazard accumulation and produce a
+              continuity report showing where β_c is at risk.
+            </p>
+            <div class="service-detail">κ assessment · λ pipeline review · β_c gap analysis</div>
+          </div>
+
+          <div class="service-card accent-cyan">
+            <div class="service-icon" aria-hidden="true">⚡</div>
+            <div class="service-name">Hazard Rate Instrumentation</div>
+            <p class="service-desc">
+              Design and implementation of λ pipelines for your services.
+              Real-time hazard rate measurement, aggregation, and alerting —
+              so you see risk building before it crosses the threshold.
+            </p>
+            <div class="service-detail" style="color:var(--accent-cyan)">λ pipeline · real-time telemetry · alerting</div>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon" aria-hidden="true">🛡️</div>
+            <div class="service-name">Load-Shedding Architecture</div>
+            <p class="service-desc">
+              Design of deterministic load-shedding and retrain-cycle systems
+              compliant with β_c governance. Rule-based, not heuristic —
+              every trigger is auditable and reproducible.
+            </p>
+            <div class="service-detail">β_c governance · rule-based shedding · retrain protocol</div>
+          </div>
+
+          <div class="service-card accent-cyan">
+            <div class="service-icon" aria-hidden="true">⚙️</div>
+            <div class="service-name">Custom Control Software</div>
+            <p class="service-desc">
+              Bespoke continuity-first control systems designed from the
+              ground up with Kappology principles. Built in Rust or TypeScript,
+              minimal dependencies, static-analysis clean.
+            </p>
+            <div class="service-detail" style="color:var(--accent-cyan)">Rust · TypeScript · Apache 2.0 deliverables</div>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon" aria-hidden="true">🎓</div>
+            <div class="service-name">Kappology Training</div>
+            <p class="service-desc">
+              Workshops and consulting to bring your engineering team up to
+              speed on continuity-first thinking — the κ–λ–β_c model,
+              instrumentation patterns, and governance design.
+            </p>
+            <div class="service-detail">workshops · documentation · embedded consulting</div>
+          </div>
+
+          <div class="service-card accent-cyan">
+            <div class="service-icon" aria-hidden="true">🔓</div>
+            <div class="service-name">CodexRoxas Integration</div>
+            <p class="service-desc">
+              Deploy and integrate CodexRoxas — the open-source AI coding
+              agent — into your development workflow. Custom sandboxing,
+              approval policies, and MCP server configuration.
+            </p>
+            <div class="service-detail" style="color:var(--accent-cyan)">self-hosted · sandboxed · Apache 2.0</div>
+          </div>
+        </div>
+
+        <p style="margin-top:2rem;font-size:0.85rem;color:var(--text-muted);font-family:var(--font-mono)">
+          To discuss an engagement:
+          <a href="https://github.com/Waste1and/codexroxas/issues" target="_blank" rel="noopener noreferrer">
+            open an issue on GitHub ↗
+          </a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════════ -->
+  <footer role="contentinfo">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">MECASIMETRA</div>
+        <p class="footer-copy">
+          &copy; 2025 Zechariah Slaughter — Mecasimetra Systems &amp; Kappology.<br />
+          CodexRoxas is a community fork of
+          <a href="https://github.com/openai/codex" target="_blank" rel="noopener noreferrer">OpenAI Codex</a>
+          and is <strong>not affiliated with or endorsed by OpenAI</strong>.<br />
+          Licensed under the
+          <a href="LICENSE" target="_blank" rel="noopener noreferrer">Apache License 2.0</a>.
+        </p>
+      </div>
+      <nav class="footer-links" aria-label="Footer links">
+        <a href="https://github.com/Waste1and/codexroxas" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+        <a href="DISCLAIMER.md" target="_blank" rel="noopener noreferrer">Disclaimer</a>
+        <a href="SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a>
+        <a href="#knowledge">Glossary</a>
+      </nav>
+      <p class="footer-legal">
+        This software is provided "as is", without warranty of any kind. It is not certified for
+        safety-critical or life-critical applications. See <a href="DISCLAIMER.md">DISCLAIMER.md</a>
+        for full terms. Use at your own risk.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/glossary.js"></script>
+</body>
+</html>
