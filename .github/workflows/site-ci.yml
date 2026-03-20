@@ -1,0 +1,112 @@
+name: Site CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "data/**"
+      - ".github/workflows/site-ci.yml"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - ".prettierrc.toml"
+      - ".prettierignore"
+  pull_request:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "data/**"
+      - ".github/workflows/site-ci.yml"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - ".prettierrc.toml"
+      - ".prettierignore"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-terms:
+    name: Validate terms.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate schema
+        run: |
+          python3 - <<'EOF'
+          import json, sys, jsonschema
+
+          with open("data/terms.schema.json") as f:
+              schema = json.load(f)
+          with open("data/terms.json") as f:
+              data = json.load(f)
+
+          jsonschema.validate(data, schema)
+          print("✓ terms.json conforms to schema")
+          EOF
+
+      - name: Validate cross-references
+        run: |
+          python3 - <<'EOF'
+          import json, sys
+
+          with open("data/terms.json") as f:
+              data = json.load(f)
+
+          terms = data["terms"]
+          ids = {t["id"] for t in terms}
+          errors = []
+
+          for t in terms:
+              for a in t.get("ancestors", []):
+                  if a not in ids:
+                      errors.append(f'{t["id"]}: unknown ancestor "{a}"')
+              for c in t.get("children", []):
+                  if c not in ids:
+                      errors.append(f'{t["id"]}: unknown child "{c}"')
+
+          if errors:
+              print("Cross-reference errors in terms.json:")
+              for e in errors:
+                  print(f"  ✗ {e}")
+              sys.exit(1)
+          else:
+              print(f"✓ All cross-references valid ({len(terms)} terms)")
+          EOF
+
+  prettier:
+    name: Prettier (formatting)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm run format
