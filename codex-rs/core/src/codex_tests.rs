@@ -2559,6 +2559,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         services,
         js_repl,
         next_internal_sub_id: AtomicU64::new(0),
+        health: Arc::new(crate::kappa_lambda::KappaLambdaHealth::new()),
     };
 
     (session, turn_context)
@@ -3353,6 +3354,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         services,
         js_repl,
         next_internal_sub_id: AtomicU64::new(0),
+        health: Arc::new(crate::kappa_lambda::KappaLambdaHealth::new()),
     });
 
     (session, turn_context, rx_event)
@@ -4940,4 +4942,97 @@ async fn unified_exec_rejects_escalated_permissions_when_policy_not_on_request()
     );
 
     pretty_assertions::assert_eq!(output, expected);
+}
+
+// ── κ–λ health integration tests ──────────────────────────────────────────────
+
+#[tokio::test]
+async fn health_status_starts_clean() {
+    let (sess, _tc, _rx) = make_session_and_context_with_rx().await;
+    let s = sess.health_status();
+    pretty_assertions::assert_eq!(
+        s,
+        crate::kappa_lambda::HealthStatus {
+            kappa: 1.0,
+            lambda: 0.0,
+            total_queries: 0,
+            hits: 0,
+        }
+    );
+}
+
+#[tokio::test]
+async fn turn_complete_event_increments_hits() {
+    let (sess, tc, _rx) = make_session_and_context_with_rx().await;
+
+    sess.send_event_raw(crate::protocol::Event {
+        id: tc.sub_id.clone(),
+        msg: EventMsg::TurnComplete(TurnCompleteEvent {
+            turn_id: tc.sub_id.clone(),
+            last_agent_message: None,
+        }),
+    })
+    .await;
+
+    let s = sess.health_status();
+    pretty_assertions::assert_eq!(
+        s,
+        crate::kappa_lambda::HealthStatus {
+            kappa: 1.0,
+            lambda: 0.0,
+            total_queries: 1,
+            hits: 1,
+        }
+    );
+}
+
+#[tokio::test]
+async fn turn_aborted_event_increments_misses() {
+    let (sess, tc, _rx) = make_session_and_context_with_rx().await;
+
+    sess.send_event_raw(crate::protocol::Event {
+        id: tc.sub_id.clone(),
+        msg: EventMsg::TurnAborted(crate::protocol::TurnAbortedEvent {
+            turn_id: Some(tc.sub_id.clone()),
+            reason: crate::protocol::TurnAbortReason::Interrupted,
+        }),
+    })
+    .await;
+
+    let s = sess.health_status();
+    assert_eq!(s.total_queries, 1);
+    assert_eq!(s.hits, 0);
+    // λ = 1 - 0/1 = 1.0
+    assert!((s.lambda - 1.0).abs() < 1e-9);
+}
+
+#[tokio::test]
+async fn mixed_events_compute_correct_health() {
+    let (sess, tc, _rx) = make_session_and_context_with_rx().await;
+
+    // 2 successes, then 1 failure
+    for _ in 0..2 {
+        sess.send_event_raw(crate::protocol::Event {
+            id: tc.sub_id.clone(),
+            msg: EventMsg::TurnComplete(TurnCompleteEvent {
+                turn_id: tc.sub_id.clone(),
+                last_agent_message: None,
+            }),
+        })
+        .await;
+    }
+    sess.send_event_raw(crate::protocol::Event {
+        id: tc.sub_id.clone(),
+        msg: EventMsg::TurnAborted(crate::protocol::TurnAbortedEvent {
+            turn_id: Some(tc.sub_id.clone()),
+            reason: crate::protocol::TurnAbortReason::Interrupted,
+        }),
+    })
+    .await;
+
+    let s = sess.health_status();
+    assert_eq!(s.total_queries, 3);
+    assert_eq!(s.hits, 2);
+    // λ = 1 - 2/3 ≈ 0.333
+    assert!((s.lambda - (1.0 / 3.0)).abs() < 1e-9);
 }
