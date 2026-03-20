@@ -1,10 +1,22 @@
 <h1 align="center">CodexRoxas · Mecasimetra</h1>
 <p align="center">Community fork of <a href="https://github.com/openai/codex">openai/codex</a> &mdash; <strong>not affiliated with or endorsed by OpenAI</strong></p>
 <p align="center">
+  <a href="https://github.com/Waste1and/codexroxas/actions/workflows/site-ci.yml"><img src="https://github.com/Waste1and/codexroxas/actions/workflows/site-ci.yml/badge.svg" alt="Site CI" /></a>
   <img src="https://img.shields.io/badge/theme-black%20neon%20%2B%20magenta-ff00aa?style=flat-square" alt="Theme: black neon + magenta" />
   <img src="https://img.shields.io/badge/framework-Kappology-00e5ff?style=flat-square" alt="Kappology framework" />
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="Apache 2.0" />
 </p>
+
+---
+
+## Table of Contents
+
+- [Mecasimetra Website](#mecasimetra--black-neon--magenta-design)
+- [Kappology — The Knowledge Model](#kappology--the-knowledge-model)
+- [Local Development](#local-development)
+- [Codex CLI Quickstart](#quickstart)
+- [Documentation](#docs)
+- [Branch Protection Checklist](#branch-protection-checklist-for-repo-admins)
 
 ---
 
@@ -104,6 +116,7 @@ assets/
   js/glossary.js      — knowledge graph: fetch, render, search, transitions
 data/
   terms.json          — Kappology term definitions and relationships
+  terms.schema.json   — JSON Schema for terms.json (validated in CI)
 DISCLAIMER.md         — no warranty, no safety-critical use
 SECURITY.md           — vulnerability reporting
 LICENSE               — Apache License 2.0
@@ -174,8 +187,8 @@ Apply these settings under **Settings → Branches → Add rule → `main`** in 
 - [ ] Require a pull request before merging
   - [ ] Required approvals: **2** (total PR approvals; satisfied by any combination of reviewers)
   - [ ] Dismiss stale pull request approvals when new commits are pushed
-  - [ ] Require review from Code Owners (requires `.github/CODEOWNERS` — ensures @Waste1and reviews all changes)
-- [ ] Require status checks to pass before merging (select relevant CI checks)
+  - [x] Require review from Code Owners (`.github/CODEOWNERS` is configured — ensures @Waste1and reviews all changes)
+- [ ] Require status checks to pass before merging (select: `validate-terms`, `prettier`, `codespell`)
 - [ ] Block force-pushes (leave "Allow force pushes" unchecked)
 - [ ] Block branch deletion (leave "Allow deletions" unchecked)
 - [ ] _(Optional)_ Require signed commits

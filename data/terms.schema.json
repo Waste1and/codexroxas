@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Kappology Terms",
+  "description": "Schema for the Kappology knowledge-graph term definitions used by the Mecasimetra glossary.",
+  "type": "object",
+  "required": ["terms"],
+  "additionalProperties": false,
+  "properties": {
+    "terms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "name",
+          "short",
+          "definition",
+          "ancestors",
+          "children",
+          "formula",
+          "tags"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "Unique kebab-case identifier used in URL routing (#/term/<id>)."
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unicode mathematical or Greek symbol representing the term."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable display name."
+          },
+          "short": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One-line summary shown in search results and cards."
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Full definition text rendered in the term detail view."
+          },
+          "ancestors": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "description": "IDs of parent/prerequisite concepts (shown as ↑ navigation links)."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "description": "IDs of derived concepts (shown as → navigation links)."
+          },
+          "formula": {
+            "type": ["string", "null"],
+            "description": "Optional formula string rendered in monospace with cyan glow; use Unicode math characters. null if not applicable."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "description": "Free-form lowercase kebab-case tags for filtering."
+          }
+        }
+      }
+    }
+  }
+}
