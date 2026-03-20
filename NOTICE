@@ -1,6 +1,12 @@
 OpenAI Codex
 Copyright 2025 OpenAI
 
+CodexRoxas (community fork)
+Copyright 2025 Waste1and — Mecasimetra
+Developer & Systems Engineer: Waste1and (https://github.com/Waste1and)
+Business entity: Mecasimetra (Intelligence Systems) — https://github.com/Waste1and/Mecasimetra
+Fork contributions are licensed under the Apache License, Version 2.0.
+
 This project includes code derived from [Ratatui](https://github.com/ratatui/ratatui), licensed under the MIT license.
 Copyright (c) 2016-2022 Florian Dehau
 Copyright (c) 2023-2025 The Ratatui Developers
