@@ -7,6 +7,7 @@ use crate::config_loader::ConfigLayerStackOrdering;
 use crate::config_loader::NetworkConstraints;
 use crate::config_loader::RequirementSource;
 use crate::config_loader::Sourced;
+use crate::exec::ExecCapturePolicy;
 use crate::exec::ExecToolCallOutput;
 use crate::function_tool::FunctionCallError;
 use crate::mcp_connection_manager::ToolInfo;
@@ -14,6 +15,7 @@ use crate::models_manager::model_info;
 use crate::shell::default_user_shell;
 use crate::tools::format_exec_output_str;
 
+use codex_features::Features;
 use codex_protocol::ThreadId;
 use codex_protocol::models::FunctionCallOutputBody;
 use codex_protocol::models::FunctionCallOutputPayload;
@@ -72,15 +74,13 @@ use codex_protocol::protocol::ConversationAudioParams;
 use codex_protocol::protocol::RealtimeAudioFrame;
 use codex_protocol::protocol::Submission;
 use codex_protocol::protocol::W3cTraceContext;
+use core_test_support::tracing::install_test_tracing;
 use opentelemetry::trace::TraceContextExt;
 use opentelemetry::trace::TraceId;
-use opentelemetry::trace::TracerProvider as _;
-use opentelemetry_sdk::trace::SdkTracerProvider;
 use std::path::Path;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use tracing_subscriber::prelude::*;
 
 use codex_protocol::mcp::CallToolResult as McpCallToolResult;
 use pretty_assertions::assert_eq;
@@ -90,7 +90,6 @@ use serde::Deserialize;
 use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::Once;
 use std::time::Duration as StdDuration;
 
 #[path = "codex_tests_guardian.rs"]
@@ -634,6 +633,21 @@ fn filter_connectors_for_input_skips_disabled_connectors() {
     let explicitly_enabled_connectors = HashSet::new();
     let selected = filter_connectors_for_input(
         &[connector],
+        &input,
+        &explicitly_enabled_connectors,
+        &HashMap::new(),
+    );
+
+    assert_eq!(selected, Vec::new());
+}
+
+#[test]
+fn filter_connectors_for_input_skips_plugin_mentions() {
+    let connectors = vec![make_connector("figma", "Figma")];
+    let input = vec![user_message("use [@figma](plugin://figma@openai-curated)")];
+    let explicitly_enabled_connectors = HashSet::new();
+    let selected = filter_connectors_for_input(
+        &connectors,
         &input,
         &explicitly_enabled_connectors,
         &HashMap::new(),
@@ -2031,18 +2045,6 @@ fn text_block(s: &str) -> serde_json::Value {
     })
 }
 
-fn init_test_tracing() {
-    static INIT: Once = Once::new();
-    INIT.call_once(|| {
-        let provider = SdkTracerProvider::builder().build();
-        let tracer = provider.tracer("codex-core-tests");
-        let subscriber =
-            tracing_subscriber::registry().with(tracing_opentelemetry::layer().with_tracer(tracer));
-        tracing::subscriber::set_global_default(subscriber)
-            .expect("global tracing subscriber should only be installed once");
-    });
-}
-
 async fn build_test_config(codex_home: &Path) -> Config {
     ConfigBuilder::default()
         .codex_home(codex_home.to_path_buf())
@@ -2465,7 +2467,11 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
-    let environment = Arc::new(codex_environment::Environment);
+    let environment = Arc::new(
+        codex_exec_server::Environment::create(None)
+            .await
+            .expect("create environment"),
+    );
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
@@ -2528,6 +2534,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
 
     let skills_outcome = Arc::new(services.skills_manager.skills_for_config(&per_turn_config));
     let turn_context = Session::make_turn_context(
+        conversation_id,
         Some(Arc::clone(&auth_manager)),
         &session_telemetry,
         session_configuration.provider.clone(),
@@ -2731,7 +2738,7 @@ async fn submit_with_id_captures_current_span_trace_context() {
         session_loop_termination: completed_session_loop_termination(),
     };
 
-    init_test_tracing();
+    let _trace_test_context = install_test_tracing("codex-core-tests");
 
     let request_parent = W3cTraceContext {
         traceparent: Some("00-00000000000000000000000000000011-0000000000000022-01".into()),
@@ -2767,7 +2774,7 @@ async fn submit_with_id_captures_current_span_trace_context() {
 async fn new_default_turn_captures_current_span_trace_id() {
     let (session, _turn_context) = make_session_and_context().await;
 
-    init_test_tracing();
+    let _trace_test_context = install_test_tracing("codex-core-tests");
 
     let request_parent = W3cTraceContext {
         traceparent: Some("00-00000000000000000000000000000011-0000000000000022-01".into()),
@@ -2802,7 +2809,7 @@ async fn new_default_turn_captures_current_span_trace_id() {
 
 #[test]
 fn submission_dispatch_span_prefers_submission_trace_context() {
-    init_test_tracing();
+    let _trace_test_context = install_test_tracing("codex-core-tests");
 
     let ambient_parent = W3cTraceContext {
         traceparent: Some("00-00000000000000000000000000000033-0000000000000044-01".into()),
@@ -2835,7 +2842,7 @@ fn submission_dispatch_span_prefers_submission_trace_context() {
 
 #[test]
 fn submission_dispatch_span_uses_debug_for_realtime_audio() {
-    init_test_tracing();
+    let _trace_test_context = install_test_tracing("codex-core-tests");
 
     let dispatch_span = submission_dispatch_span(&Submission {
         id: "sub-1".into(),
@@ -2918,7 +2925,7 @@ async fn spawn_task_turn_span_inherits_dispatch_trace_context() {
         }
     }
 
-    init_test_tracing();
+    let _trace_test_context = install_test_tracing("codex-core-tests");
 
     let request_parent = W3cTraceContext {
         traceparent: Some("00-00000000000000000000000000000011-0000000000000022-01".into()),
@@ -3260,7 +3267,11 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
-    let environment = Arc::new(codex_environment::Environment);
+    let environment = Arc::new(
+        codex_exec_server::Environment::create(None)
+            .await
+            .expect("create environment"),
+    );
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
@@ -3323,6 +3334,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
 
     let skills_outcome = Arc::new(services.skills_manager.skills_for_config(&per_turn_config));
     let turn_context = Arc::new(Session::make_turn_context(
+        conversation_id,
         Some(Arc::clone(&auth_manager)),
         &session_telemetry,
         session_configuration.provider.clone(),
@@ -3415,7 +3427,7 @@ async fn refresh_mcp_servers_is_deferred_until_next_turn() {
 #[tokio::test]
 async fn record_model_warning_appends_user_message() {
     let (mut session, turn_context) = make_session_and_context().await;
-    let features = crate::features::Features::with_defaults().into();
+    let features = Features::with_defaults().into();
     session.features = features;
 
     session
@@ -3718,7 +3730,11 @@ async fn handle_output_item_done_records_image_save_history_message() {
     let session = Arc::new(session);
     let turn_context = Arc::new(turn_context);
     let call_id = "ig_history_records_message";
-    let expected_saved_path = std::env::temp_dir().join(format!("{call_id}.png"));
+    let expected_saved_path = crate::stream_events_utils::image_generation_artifact_path(
+        turn_context.config.codex_home.as_path(),
+        &session.conversation_id.to_string(),
+        call_id,
+    );
     let _ = std::fs::remove_file(&expected_saved_path);
     let item = ResponseItem::ImageGenerationCall {
         id: call_id.to_string(),
@@ -3738,13 +3754,26 @@ async fn handle_output_item_done_records_image_save_history_message() {
         .expect("image generation item should succeed");
 
     let history = session.clone_history().await;
+    let image_output_path = crate::stream_events_utils::image_generation_artifact_path(
+        turn_context.config.codex_home.as_path(),
+        &session.conversation_id.to_string(),
+        "<image_id>",
+    );
+    let image_output_dir = image_output_path
+        .parent()
+        .expect("generated image path should have a parent");
     let save_message: ResponseItem = DeveloperInstructions::new(format!(
         "Generated images are saved to {} as {} by default.",
-        std::env::temp_dir().display(),
-        std::env::temp_dir().join("<image_id>.png").display(),
+        image_output_dir.display(),
+        image_output_path.display(),
     ))
     .into();
-    assert_eq!(history.raw_items(), &[save_message, item]);
+    let copy_message: ResponseItem = DeveloperInstructions::new(
+        "If you need to use a generated image at another path, copy it and leave the original in place unless the user explicitly asks you to delete it."
+            .to_string(),
+    )
+    .into();
+    assert_eq!(history.raw_items(), &[save_message, copy_message, item]);
     assert_eq!(
         std::fs::read(&expected_saved_path).expect("saved file"),
         b"foo"
@@ -3758,7 +3787,11 @@ async fn handle_output_item_done_skips_image_save_message_when_save_fails() {
     let session = Arc::new(session);
     let turn_context = Arc::new(turn_context);
     let call_id = "ig_history_no_message";
-    let expected_saved_path = std::env::temp_dir().join(format!("{call_id}.png"));
+    let expected_saved_path = crate::stream_events_utils::image_generation_artifact_path(
+        turn_context.config.codex_home.as_path(),
+        &session.conversation_id.to_string(),
+        call_id,
+    );
     let _ = std::fs::remove_file(&expected_saved_path);
     let item = ResponseItem::ImageGenerationCall {
         id: call_id.to_string(),
@@ -4779,6 +4812,7 @@ async fn rejects_escalated_permissions_when_policy_not_on_request() {
         },
         cwd: turn_context.cwd.clone(),
         expiration: timeout_ms.into(),
+        capture_policy: ExecCapturePolicy::ShellTool,
         env: HashMap::new(),
         network: None,
         sandbox_permissions,
@@ -4796,6 +4830,7 @@ async fn rejects_escalated_permissions_when_policy_not_on_request() {
         command: params.command.clone(),
         cwd: params.cwd.clone(),
         expiration: timeout_ms.into(),
+        capture_policy: ExecCapturePolicy::ShellTool,
         env: HashMap::new(),
         network: None,
         windows_sandbox_level: turn_context.windows_sandbox_level,
