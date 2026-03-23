@@ -3,6 +3,8 @@ use crate::CodexAuth;
 use crate::ModelProviderInfo;
 use crate::OPENAI_PROVIDER_ID;
 use crate::agent::AgentControl;
+use crate::agent::inter_agent_instruction::InterAgentDelivery;
+use crate::agent::inter_agent_instruction::InterAgentInstruction;
 use crate::codex::Codex;
 use crate::codex::CodexSpawnArgs;
 use crate::codex::CodexSpawnOk;
@@ -26,6 +28,8 @@ use crate::shell_snapshot::ShellSnapshot;
 use crate::skills::SkillsManager;
 use codex_protocol::ThreadId;
 use codex_protocol::config_types::CollaborationModeMask;
+#[cfg(test)]
+use codex_protocol::models::ResponseItem;
 use codex_protocol::openai_models::ModelPreset;
 use codex_protocol::protocol::InitialHistory;
 use codex_protocol::protocol::McpServerRefreshConfig;
@@ -169,18 +173,23 @@ impl ThreadManager {
         collaboration_modes_config: CollaborationModesConfig,
     ) -> Self {
         let codex_home = config.codex_home.clone();
+        let restriction_product = session_source.restriction_product();
         let openai_models_provider = config
             .model_providers
             .get(OPENAI_PROVIDER_ID)
             .cloned()
             .unwrap_or_else(|| ModelProviderInfo::create_openai_provider(/*base_url*/ None));
         let (thread_created_tx, _) = broadcast::channel(THREAD_CREATED_CHANNEL_CAPACITY);
-        let plugins_manager = Arc::new(PluginsManager::new(codex_home.clone()));
+        let plugins_manager = Arc::new(PluginsManager::new_with_restriction_product(
+            codex_home.clone(),
+            restriction_product,
+        ));
         let mcp_manager = Arc::new(McpManager::new(Arc::clone(&plugins_manager)));
-        let skills_manager = Arc::new(SkillsManager::new(
+        let skills_manager = Arc::new(SkillsManager::new_with_restriction_product(
             codex_home.clone(),
             Arc::clone(&plugins_manager),
             config.bundled_skills_enabled(),
+            restriction_product,
         ));
         let file_watcher = build_file_watcher(codex_home.clone(), Arc::clone(&skills_manager));
         Self {
@@ -236,12 +245,17 @@ impl ThreadManager {
         set_thread_manager_test_mode_for_tests(/*enabled*/ true);
         let auth_manager = AuthManager::from_auth_for_testing(auth);
         let (thread_created_tx, _) = broadcast::channel(THREAD_CREATED_CHANNEL_CAPACITY);
-        let plugins_manager = Arc::new(PluginsManager::new(codex_home.clone()));
+        let restriction_product = SessionSource::Exec.restriction_product();
+        let plugins_manager = Arc::new(PluginsManager::new_with_restriction_product(
+            codex_home.clone(),
+            restriction_product,
+        ));
         let mcp_manager = Arc::new(McpManager::new(Arc::clone(&plugins_manager)));
-        let skills_manager = Arc::new(SkillsManager::new(
+        let skills_manager = Arc::new(SkillsManager::new_with_restriction_product(
             codex_home.clone(),
             Arc::clone(&plugins_manager),
             /*bundled_skills_enabled*/ true,
+            restriction_product,
         ));
         let file_watcher = build_file_watcher(codex_home.clone(), Arc::clone(&skills_manager));
         Self {
@@ -594,6 +608,29 @@ impl ThreadManagerState {
             log.push((thread_id, op.clone()));
         }
         thread.submit(op).await
+    }
+
+    #[cfg(test)]
+    /// Append a prebuilt message to a thread by ID outside the normal user-input path.
+    pub(crate) async fn append_message(
+        &self,
+        thread_id: ThreadId,
+        message: ResponseItem,
+    ) -> CodexResult<String> {
+        let thread = self.get_thread(thread_id).await?;
+        thread.append_message(message).await
+    }
+
+    pub(crate) async fn deliver_inter_agent_instruction(
+        &self,
+        thread_id: ThreadId,
+        instruction: InterAgentInstruction,
+        delivery: InterAgentDelivery,
+    ) -> CodexResult<String> {
+        let thread = self.get_thread(thread_id).await?;
+        thread
+            .deliver_inter_agent_instruction(instruction, delivery)
+            .await
     }
 
     /// Remove a thread from the manager by ID, returning it when present.
