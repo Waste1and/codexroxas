@@ -1,19 +1,14 @@
 use async_trait::async_trait;
 use codex_protocol::request_permissions::RequestPermissionsArgs;
+use codex_sandboxing::policy_transforms::normalize_additional_permissions;
 
 use crate::function_tool::FunctionCallError;
-use crate::sandboxing::normalize_additional_permissions;
 use crate::tools::context::FunctionToolOutput;
 use crate::tools::context::ToolInvocation;
 use crate::tools::context::ToolPayload;
 use crate::tools::handlers::parse_arguments_with_base_path;
 use crate::tools::registry::ToolHandler;
 use crate::tools::registry::ToolKind;
-
-pub(crate) fn request_permissions_tool_description() -> String {
-    "Request additional filesystem or network permissions from the user and wait for the client to grant a subset of the requested permission profile. Granted permissions apply automatically to later shell-like commands in the current turn, or for the rest of the session if the client approves them at session scope."
-        .to_string()
-}
 
 pub struct RequestPermissionsHandler;
 

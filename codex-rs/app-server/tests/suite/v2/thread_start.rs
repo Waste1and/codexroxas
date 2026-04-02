@@ -7,7 +7,10 @@ use app_test_support::write_chatgpt_auth;
 use codex_app_server_protocol::JSONRPCError;
 use codex_app_server_protocol::JSONRPCMessage;
 use codex_app_server_protocol::JSONRPCResponse;
+use codex_app_server_protocol::McpServerStartupState;
+use codex_app_server_protocol::McpServerStatusUpdatedNotification;
 use codex_app_server_protocol::RequestId;
+use codex_app_server_protocol::ServerNotification;
 use codex_app_server_protocol::ThreadStartParams;
 use codex_app_server_protocol::ThreadStartResponse;
 use codex_app_server_protocol::ThreadStartedNotification;
@@ -23,6 +26,7 @@ use pretty_assertions::assert_eq;
 use serde_json::Value;
 use serde_json::json;
 use std::path::Path;
+use std::time::Duration;
 use tempfile::TempDir;
 use tokio::time::timeout;
 use wiremock::Mock;
@@ -30,6 +34,11 @@ use wiremock::MockServer;
 use wiremock::ResponseTemplate;
 use wiremock::matchers::method;
 use wiremock::matchers::path;
+
+use super::analytics::assert_basic_thread_initialized_event;
+use super::analytics::enable_analytics_capture;
+use super::analytics::thread_initialized_event;
+use super::analytics::wait_for_analytics_payload;
 
 const DEFAULT_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
@@ -147,6 +156,73 @@ async fn thread_start_creates_thread_and_emits_started() -> Result<()> {
         serde_json::from_value(notif.params.expect("params must be present"))?;
     assert_eq!(started.thread, thread);
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn thread_start_tracks_thread_initialized_analytics() -> Result<()> {
+    let server = create_mock_responses_server_repeating_assistant("Done").await;
+
+    let codex_home = TempDir::new()?;
+    create_config_toml_with_chatgpt_base_url(
+        codex_home.path(),
+        &server.uri(),
+        &server.uri(),
+        /*general_analytics_enabled*/ true,
+    )?;
+    enable_analytics_capture(&server, codex_home.path()).await?;
+
+    let mut mcp = McpProcess::new(codex_home.path()).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    let req_id = mcp
+        .send_thread_start_request(ThreadStartParams::default())
+        .await?;
+    let resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(req_id)),
+    )
+    .await??;
+    let ThreadStartResponse { thread, .. } = to_response::<ThreadStartResponse>(resp)?;
+
+    let payload = wait_for_analytics_payload(&server, DEFAULT_READ_TIMEOUT).await?;
+    assert_eq!(payload["events"].as_array().expect("events array").len(), 1);
+    let event = thread_initialized_event(&payload)?;
+    assert_basic_thread_initialized_event(event, &thread.id, "mock-model", "new");
+    Ok(())
+}
+
+#[tokio::test]
+async fn thread_start_does_not_track_thread_initialized_analytics_without_feature() -> Result<()> {
+    let server = create_mock_responses_server_repeating_assistant("Done").await;
+
+    let codex_home = TempDir::new()?;
+    create_config_toml_with_chatgpt_base_url(
+        codex_home.path(),
+        &server.uri(),
+        &server.uri(),
+        /*general_analytics_enabled*/ false,
+    )?;
+    enable_analytics_capture(&server, codex_home.path()).await?;
+
+    let mut mcp = McpProcess::new(codex_home.path()).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    let req_id = mcp
+        .send_thread_start_request(ThreadStartParams::default())
+        .await?;
+    let resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(req_id)),
+    )
+    .await??;
+    let _ = to_response::<ThreadStartResponse>(resp)?;
+
+    let payload = wait_for_analytics_payload(&server, Duration::from_millis(250)).await;
+    assert!(
+        payload.is_err(),
+        "thread analytics should be gated off when general_analytics is disabled"
+    );
     Ok(())
 }
 
@@ -329,6 +405,103 @@ async fn thread_start_fails_when_required_mcp_server_fails_to_initialize() -> Re
 }
 
 #[tokio::test]
+async fn thread_start_emits_mcp_server_status_updated_notifications() -> Result<()> {
+    let server = create_mock_responses_server_repeating_assistant("Done").await;
+
+    let codex_home = TempDir::new()?;
+    create_config_toml_with_optional_broken_mcp(codex_home.path(), &server.uri())?;
+
+    let mut mcp = McpProcess::new(codex_home.path()).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    let req_id = mcp
+        .send_thread_start_request(ThreadStartParams::default())
+        .await?;
+
+    let _: ThreadStartResponse = to_response(
+        timeout(
+            DEFAULT_READ_TIMEOUT,
+            mcp.read_stream_until_response_message(RequestId::Integer(req_id)),
+        )
+        .await??,
+    )?;
+
+    let starting = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_matching_notification(
+            "mcpServer/startupStatus/updated starting",
+            |notification| {
+                notification.method == "mcpServer/startupStatus/updated"
+                    && notification
+                        .params
+                        .as_ref()
+                        .and_then(|params| params.get("name"))
+                        .and_then(Value::as_str)
+                        == Some("optional_broken")
+                    && notification
+                        .params
+                        .as_ref()
+                        .and_then(|params| params.get("status"))
+                        .and_then(Value::as_str)
+                        == Some("starting")
+            },
+        ),
+    )
+    .await??;
+    let starting: ServerNotification = starting.try_into()?;
+    let ServerNotification::McpServerStatusUpdated(starting) = starting else {
+        anyhow::bail!("unexpected notification variant");
+    };
+    assert_eq!(
+        starting,
+        McpServerStatusUpdatedNotification {
+            name: "optional_broken".to_string(),
+            status: McpServerStartupState::Starting,
+            error: None,
+        }
+    );
+
+    let failed = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_matching_notification(
+            "mcpServer/startupStatus/updated failed",
+            |notification| {
+                notification.method == "mcpServer/startupStatus/updated"
+                    && notification
+                        .params
+                        .as_ref()
+                        .and_then(|params| params.get("name"))
+                        .and_then(Value::as_str)
+                        == Some("optional_broken")
+                    && notification
+                        .params
+                        .as_ref()
+                        .and_then(|params| params.get("status"))
+                        .and_then(Value::as_str)
+                        == Some("failed")
+            },
+        ),
+    )
+    .await??;
+    let failed: ServerNotification = failed.try_into()?;
+    let ServerNotification::McpServerStatusUpdated(failed) = failed else {
+        anyhow::bail!("unexpected notification variant");
+    };
+    assert_eq!(failed.name, "optional_broken");
+    assert_eq!(failed.status, McpServerStartupState::Failed);
+    assert!(
+        failed
+            .error
+            .as_deref()
+            .is_some_and(|error| error.contains("MCP client for `optional_broken` failed to start")),
+        "unexpected MCP startup error: {:?}",
+        failed.error
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn thread_start_surfaces_cloud_requirements_load_errors() -> Result<()> {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -355,6 +528,7 @@ async fn thread_start_surfaces_cloud_requirements_load_errors() -> Result<()> {
         codex_home.path(),
         &model_server.uri(),
         &chatgpt_base_url,
+        /*general_analytics_enabled*/ false,
     )?;
     write_chatgpt_auth(
         codex_home.path(),
@@ -438,7 +612,13 @@ fn create_config_toml_with_chatgpt_base_url(
     codex_home: &Path,
     server_uri: &str,
     chatgpt_base_url: &str,
+    general_analytics_enabled: bool,
 ) -> std::io::Result<()> {
+    let general_analytics_toml = if general_analytics_enabled {
+        "\n[features]\ngeneral_analytics = true\n".to_string()
+    } else {
+        String::new()
+    };
     let config_toml = codex_home.join("config.toml");
     std::fs::write(
         config_toml,
@@ -450,6 +630,7 @@ sandbox_mode = "read-only"
 chatgpt_base_url = "{chatgpt_base_url}"
 
 model_provider = "mock_provider"
+{general_analytics_toml}
 
 [model_providers.mock_provider]
 name = "Mock provider for test"
@@ -485,9 +666,52 @@ request_max_retries = 0
 stream_max_retries = 0
 
 [mcp_servers.required_broken]
-command = "codex-definitely-not-a-real-binary"
+{required_broken_transport}
 required = true
-"#
+"#,
+            required_broken_transport = broken_mcp_transport_toml()
         ),
     )
+}
+
+fn create_config_toml_with_optional_broken_mcp(
+    codex_home: &Path,
+    server_uri: &str,
+) -> std::io::Result<()> {
+    let config_toml = codex_home.join("config.toml");
+    std::fs::write(
+        config_toml,
+        format!(
+            r#"
+model = "mock-model"
+approval_policy = "never"
+sandbox_mode = "read-only"
+
+model_provider = "mock_provider"
+
+[model_providers.mock_provider]
+name = "Mock provider for test"
+base_url = "{server_uri}/v1"
+wire_api = "responses"
+request_max_retries = 0
+stream_max_retries = 0
+
+[mcp_servers.optional_broken]
+{optional_broken_transport}
+"#,
+            optional_broken_transport = broken_mcp_transport_toml()
+        ),
+    )
+}
+
+#[cfg(target_os = "windows")]
+fn broken_mcp_transport_toml() -> &'static str {
+    r#"command = "cmd"
+args = ["/C", "exit 1"]"#
+}
+
+#[cfg(not(target_os = "windows"))]
+fn broken_mcp_transport_toml() -> &'static str {
+    r#"command = "/bin/sh"
+args = ["-c", "exit 1"]"#
 }
